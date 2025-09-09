@@ -3,11 +3,17 @@ name: Daily Crypto Signal
 on:
   schedule:
     - cron: "0 7 * * *"   # 07:00 UTC ≈ 09:00 NL (zomer), 08:00 (winter)
-  workflow_dispatch: {}    # handmatig starten in Actions
+  workflow_dispatch: {}    # handmatig starten
 
 jobs:
   run:
     runs-on: ubuntu-latest
+
+    # ✅ Secrets op job-niveau → elke stap (en Python) ziet ze zeker
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,18 +28,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests pandas numpy
 
-      # ✅ controleer of secrets echt binnenkomen
       - name: Check envs
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           if [ -z "${TELEGRAM_BOT_TOKEN}" ]; then echo "❌ TELEGRAM_BOT_TOKEN is leeg"; exit 1; fi
           if [ -z "${TELEGRAM_CHAT_ID}" ]; then echo "❌ TELEGRAM_CHAT_ID is leeg"; exit 1; fi
           echo "✅ Secrets aanwezig"
 
       - name: Run signal
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python signal.py
