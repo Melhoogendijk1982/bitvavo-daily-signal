@@ -2,9 +2,8 @@ name: Daily Crypto Signal
 
 on:
   schedule:
-    # GitHub Actions gebruikt UTC. 07:00 UTC ≈ 09:00 NL in de zomer, 08:00 in de winter.
-    - cron: "0 7 * * *"
-  workflow_dispatch: {}
+    - cron: "0 7 * * *"   # 07:00 UTC ≈ 09:00 NL (zomer), 08:00 (winter)
+  workflow_dispatch: {}    # handmatig starten in Actions
 
 jobs:
   run:
@@ -22,6 +21,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install requests pandas numpy
+
+      # ✅ controleer of secrets echt binnenkomen
+      - name: Check envs
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "${TELEGRAM_BOT_TOKEN}" ]; then echo "❌ TELEGRAM_BOT_TOKEN is leeg"; exit 1; fi
+          if [ -z "${TELEGRAM_CHAT_ID}" ]; then echo "❌ TELEGRAM_CHAT_ID is leeg"; exit 1; fi
+          echo "✅ Secrets aanwezig"
 
       - name: Run signal
         env:
